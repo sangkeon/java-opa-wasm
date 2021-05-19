@@ -28,6 +28,7 @@ import org.json.JSONObject;
 
 public class OPAModule implements Disposable {
     private Map<Integer, String> builtinFunc = new HashMap<>();
+    private Map<String, Integer> entrypoints = new HashMap<>();
 
     private Store store;
     private Engine engine;
@@ -98,6 +99,33 @@ public class OPAModule implements Disposable {
         _dataHeapPtr = _baseHeapPtr;
 
         loadBuiltins();
+
+        loadEntrypoints();
+    }
+
+    public Map<String, Integer> getEntrypoints() {
+        return entrypoints;
+    }
+
+    public void loadEntrypoints() {
+        entrypoints.clear();
+
+        OPAAddr entrypointsAddr = exports.entrypoints();
+
+        if(!entrypointsAddr.isNull()) {
+            String jsonString = dumpJson(entrypointsAddr);
+
+            JSONObject jObject = new JSONObject(jsonString);
+
+            Iterator<String> iter = jObject.keys();
+
+            while(iter.hasNext()) {
+                String key = iter.next();
+                int val = jObject.getInt(key);
+
+                entrypoints.put(key, val);
+            }
+        }
     }
 
     public void loadBuiltins() {
@@ -132,8 +160,21 @@ public class OPAModule implements Disposable {
     public String readStringFromOPAMemory(OPAAddr addr) {
         return decodeNullTerminatedString(memory, addr);
     }
-    
+
     public String evaluate(String json) {
+        // Evaluate with default entrypoint
+        return evaluate(json, 0);
+    }
+
+    public String evaluate(String json, String entrypoint) {
+        if(entrypoints.containsKey(entrypoint)) {
+            return evaluate(json, entrypoints.get(entrypoint));
+        }
+
+        throw new RuntimeException(String.format("entrypoint %s is not valid", entrypoint));
+    }
+    
+    public String evaluate(String json, int entrypoint) {
         // Reset the heap pointer before each evaluation
         exports.opaHeapPtrSet(_dataHeapPtr);
 
@@ -144,6 +185,7 @@ public class OPAModule implements Disposable {
         OPAAddr ctxAddr = exports.opaEvalCtxNew();
         exports.opaEvalCtxSetInput(ctxAddr, inputAddr);
         exports.opaEvalCtxSetData(ctxAddr, _dataAddr);
+        exports.opaEvalCtxSetEntryPoint(ctxAddr, entrypoint);
 
         // Actually evaluate the policy
         OPAErrorCode err = exports.eval(ctxAddr);

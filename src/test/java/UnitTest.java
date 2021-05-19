@@ -15,7 +15,7 @@ public class UnitTest {
                 OPAModule om = new OPAModule(bundle);
             ) {
                 String input = "{\"user\": \"alice\"}";
-                String output = om.evaluate(input);
+                String output = om.evaluate(input, "opa/wasm/test/allowed");
 
                 assertEquals("[{\"result\":true}]", output);
            }
@@ -34,7 +34,7 @@ public class UnitTest {
                 OPAModule om = new OPAModule(bundle);
             ) {
                 String input = "{\"user\": \"bob\"}";
-                String output = om.evaluate(input);
+                String output = om.evaluate(input, "opa/wasm/test/allowed");
 
                 assertEquals("[{\"result\":false}]", output);
            }

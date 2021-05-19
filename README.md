@@ -27,7 +27,7 @@ try (
 
     om.setData(data);
 
-    String result = om.evaluate(input);
+    String result = om.evaluate(input, "opa/wasm/test/allowed");
 
     System.out.println("result=" + result);
 }
@@ -44,7 +44,7 @@ try {
         OPAModule om = new OPAModule(bundle);
     ) {
         String input = "{\"user\": \"alice\"}";
-        String result = om.evaluate(input);
+        String result = om.evaluate(input, "opa/wasm/test/allowed");
 
         System.out.println("result=" + result);
     }
