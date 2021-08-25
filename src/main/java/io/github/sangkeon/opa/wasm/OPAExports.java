@@ -3,6 +3,7 @@ package io.github.sangkeon.opa.wasm;
 import static io.github.kawamuray.wasmtime.WasmValType.I32;
 
 import io.github.kawamuray.wasmtime.Linker;
+import io.github.kawamuray.wasmtime.Store;
 
 import io.github.kawamuray.wasmtime.Func;
 import io.github.kawamuray.wasmtime.Disposable;
@@ -10,6 +11,7 @@ import io.github.kawamuray.wasmtime.WasmFunctions;
 
 public class OPAExports implements OPAExportsAPI, Disposable {
     private Linker linker;
+    private Store<Void> store;
 
     private Func opaMallocFn = null;
     private Func opaHeapPtrGetFn = null;
@@ -30,35 +32,36 @@ public class OPAExports implements OPAExportsAPI, Disposable {
     private Func opaValueAddPathFn = null;
     private Func opaValueRemovePathFn = null;
 
-    private OPAExports(Linker linker, String moduleName) {
+    private OPAExports(Linker linker, String moduleName, Store<Void> store) {
         this.linker = linker;
+        this.store = store;
 
         initFns(moduleName);
     }
 
-    public static OPAExportsAPI getOPAExports(Linker linker, String moduleName) {
-        return new OPAExports(linker, moduleName);
+    public static OPAExportsAPI getOPAExports(Linker linker, String moduleName, Store<Void> store) {
+        return new OPAExports(linker, moduleName, store);
     }
 
     public void initFns(String moduleName) {
-        opaMallocFn = linker.getOneByName(moduleName, OPAConstants.OPA_MALLOC).func();
-        opaHeapPtrGetFn = linker.getOneByName(moduleName, OPAConstants.OPA_HEAP_PTR_GET).func();
-        opaHeapPtrSetFn = linker.getOneByName(moduleName, OPAConstants.OPA_HEAP_PTR_SET).func();
-        opaJsonDumpFn = linker.getOneByName(moduleName, OPAConstants.OPA_JSON_DUMP).func();
-        opaJsonParseFn = linker.getOneByName(moduleName, OPAConstants.OPA_JSON_PARSE).func();
-        opaEvalCtxNewFn = linker.getOneByName(moduleName, OPAConstants.OPA_EVAL_CTX_NEW).func();
-        opaEvalCtxSetInputFn = linker.getOneByName(moduleName, OPAConstants.OPA_EVAL_CTX_SET_INPUT).func();
-        opaEvalCtxSetDataFn = linker.getOneByName(moduleName, OPAConstants.OPA_EVAL_CTX_SET_DATA).func();
-        opaEvalCtxGetResultFn = linker.getOneByName(moduleName, OPAConstants.OPA_EVAL_CTX_GET_RESULT).func();
-        builtinsFn = linker.getOneByName(moduleName, OPAConstants.BUILTINS).func();
-        evalFn = linker.getOneByName(moduleName, OPAConstants.EVAL).func();
-        entrypointsFn = linker.getOneByName(moduleName, OPAConstants.ENTRYPOINTS).func();
-        opaEvalCtxSetEntryPointFn = linker.getOneByName(moduleName, OPAConstants.OPA_EVAL_CTX_SET_ENTRYPOINT).func();
-        opaFreeFn = linker.getOneByName(moduleName, OPAConstants.OPA_FREE).func();
-        opaValueParseFn = linker.getOneByName(moduleName, OPAConstants.OPA_VALUE_PARSE).func();
-        opaValueDumpFn = linker.getOneByName(moduleName, OPAConstants.OPA_VALUE_DUMP).func();
-        opaValueAddPathFn = linker.getOneByName(moduleName, OPAConstants.OPA_VALUE_ADD_PATH).func();
-        opaValueRemovePathFn = linker.getOneByName(moduleName, OPAConstants.OPA_VALUE_REMOVE_PATH).func();
+        opaMallocFn = linker.get(store, moduleName, OPAConstants.OPA_MALLOC).get().func();
+        opaHeapPtrGetFn = linker.get(store, moduleName, OPAConstants.OPA_HEAP_PTR_GET).get().func();
+        opaHeapPtrSetFn = linker.get(store, moduleName, OPAConstants.OPA_HEAP_PTR_SET).get().func();
+        opaJsonDumpFn = linker.get(store, moduleName, OPAConstants.OPA_JSON_DUMP).get().func();
+        opaJsonParseFn = linker.get(store, moduleName, OPAConstants.OPA_JSON_PARSE).get().func();
+        opaEvalCtxNewFn = linker.get(store, moduleName, OPAConstants.OPA_EVAL_CTX_NEW).get().func();
+        opaEvalCtxSetInputFn = linker.get(store, moduleName, OPAConstants.OPA_EVAL_CTX_SET_INPUT).get().func();
+        opaEvalCtxSetDataFn = linker.get(store, moduleName, OPAConstants.OPA_EVAL_CTX_SET_DATA).get().func();
+        opaEvalCtxGetResultFn = linker.get(store, moduleName, OPAConstants.OPA_EVAL_CTX_GET_RESULT).get().func();
+        builtinsFn = linker.get(store, moduleName, OPAConstants.BUILTINS).get().func();
+        evalFn = linker.get(store, moduleName, OPAConstants.EVAL).get().func();
+        entrypointsFn = linker.get(store, moduleName, OPAConstants.ENTRYPOINTS).get().func();
+        opaEvalCtxSetEntryPointFn = linker.get(store, moduleName, OPAConstants.OPA_EVAL_CTX_SET_ENTRYPOINT).get().func();
+        opaFreeFn = linker.get(store, moduleName, OPAConstants.OPA_FREE).get().func();
+        opaValueParseFn = linker.get(store, moduleName, OPAConstants.OPA_VALUE_PARSE).get().func();
+        opaValueDumpFn = linker.get(store, moduleName, OPAConstants.OPA_VALUE_DUMP).get().func();
+        opaValueAddPathFn = linker.get(store, moduleName, OPAConstants.OPA_VALUE_ADD_PATH).get().func();
+        opaValueRemovePathFn = linker.get(store, moduleName, OPAConstants.OPA_VALUE_REMOVE_PATH).get().func();
     }
 
     public void disposeFns() {
@@ -159,7 +162,7 @@ public class OPAExports implements OPAExportsAPI, Disposable {
 
     @Override
     public OPAAddr opaMalloc(int bytes) {
-        WasmFunctions.Function1<Integer, Integer> opa_malloc = WasmFunctions.func(opaMallocFn, I32, I32);
+        WasmFunctions.Function1<Integer, Integer> opa_malloc = WasmFunctions.func(store, opaMallocFn, I32, I32);
         int addr  = opa_malloc.call(bytes);
 
         return OPAAddr.newAddr(addr);
@@ -167,7 +170,7 @@ public class OPAExports implements OPAExportsAPI, Disposable {
 
     @Override
     public OPAAddr opaHeapPtrGet() {
-        WasmFunctions.Function0<Integer> opa_heap_ptr_get = WasmFunctions.func(opaHeapPtrGetFn, I32);
+        WasmFunctions.Function0<Integer> opa_heap_ptr_get = WasmFunctions.func(store, opaHeapPtrGetFn, I32);
         int addr = opa_heap_ptr_get.call();
 
         return  OPAAddr.newAddr(addr);
@@ -175,13 +178,13 @@ public class OPAExports implements OPAExportsAPI, Disposable {
 
     @Override
     public void opaHeapPtrSet(OPAAddr addr) {
-        WasmFunctions.Consumer1<Integer> opa_heap_ptr_set = WasmFunctions.consumer(opaHeapPtrSetFn, I32);
+        WasmFunctions.Consumer1<Integer> opa_heap_ptr_set = WasmFunctions.consumer(store, opaHeapPtrSetFn, I32);
         opa_heap_ptr_set.accept(addr.getInternal());
     }
 
     @Override
     public OPAAddr opaJsonDump(OPAAddr valueAddr) {
-        WasmFunctions.Function1<Integer, Integer> opa_json_dump = WasmFunctions.func(opaJsonDumpFn, I32, I32);
+        WasmFunctions.Function1<Integer, Integer> opa_json_dump = WasmFunctions.func(store, opaJsonDumpFn, I32, I32);
         int strAddr  = opa_json_dump.call(valueAddr.getInternal());
 
         return OPAAddr.newAddr(strAddr);
@@ -189,7 +192,7 @@ public class OPAExports implements OPAExportsAPI, Disposable {
 
     @Override
     public OPAAddr opaJsonParse(OPAAddr addr, int jsonLength) {
-        WasmFunctions.Function2<Integer, Integer, Integer> opa_json_parse = WasmFunctions.func(opaJsonParseFn, I32, I32, I32);
+        WasmFunctions.Function2<Integer, Integer, Integer> opa_json_parse = WasmFunctions.func(store, opaJsonParseFn, I32, I32, I32);
         int valueAddr = opa_json_parse.call(addr.getInternal(), jsonLength);
 
         return OPAAddr.newAddr(valueAddr);
@@ -197,7 +200,7 @@ public class OPAExports implements OPAExportsAPI, Disposable {
 
     @Override
     public OPAAddr opaEvalCtxNew() {
-        WasmFunctions.Function0<Integer> opa_eval_ctx_new = WasmFunctions.func(opaEvalCtxNewFn, I32);
+        WasmFunctions.Function0<Integer> opa_eval_ctx_new = WasmFunctions.func(store, opaEvalCtxNewFn, I32);
         int ctxAddr = opa_eval_ctx_new.call();
 
         return OPAAddr.newAddr(ctxAddr);
@@ -205,19 +208,19 @@ public class OPAExports implements OPAExportsAPI, Disposable {
 
     @Override
     public void opaEvalCtxSetInput(OPAAddr ctxAddr, OPAAddr inputAddr) {
-        WasmFunctions.Consumer2<Integer, Integer> opa_eval_ctx_set_input = WasmFunctions.consumer(opaEvalCtxSetInputFn, I32, I32);
+        WasmFunctions.Consumer2<Integer, Integer> opa_eval_ctx_set_input = WasmFunctions.consumer(store, opaEvalCtxSetInputFn, I32, I32);
         opa_eval_ctx_set_input.accept(ctxAddr.getInternal(), inputAddr.getInternal());
     }
 
     @Override
     public void opaEvalCtxSetData(OPAAddr ctxAddr, OPAAddr dataAddr) {
-        WasmFunctions.Consumer2<Integer, Integer> opa_eval_ctx_set_data = WasmFunctions.consumer(opaEvalCtxSetDataFn, I32, I32);
+        WasmFunctions.Consumer2<Integer, Integer> opa_eval_ctx_set_data = WasmFunctions.consumer(store, opaEvalCtxSetDataFn, I32, I32);
         opa_eval_ctx_set_data.accept(ctxAddr.getInternal(), dataAddr.getInternal());
     }
 
     @Override
     public OPAAddr opaEvalCtxGetResult(OPAAddr ctxAddr) {
-        WasmFunctions.Function1<Integer, Integer> opa_eval_ctx_get_result = WasmFunctions.func(opaEvalCtxGetResultFn, I32, I32);
+        WasmFunctions.Function1<Integer, Integer> opa_eval_ctx_get_result = WasmFunctions.func(store, opaEvalCtxGetResultFn, I32, I32);
         int valueAddr =  opa_eval_ctx_get_result.call(ctxAddr.getInternal());
 
         return OPAAddr.newAddr(valueAddr);
@@ -225,7 +228,7 @@ public class OPAExports implements OPAExportsAPI, Disposable {
 
     @Override
     public OPAAddr builtins() {
-        WasmFunctions.Function0<Integer> builtins = WasmFunctions.func(builtinsFn, I32);
+        WasmFunctions.Function0<Integer> builtins = WasmFunctions.func(store, builtinsFn, I32);
         int valueAddr = builtins.call();
 
         return OPAAddr.newAddr(valueAddr);
@@ -233,7 +236,7 @@ public class OPAExports implements OPAExportsAPI, Disposable {
 
     @Override
     public OPAErrorCode eval(OPAAddr ctxAddr) {
-        WasmFunctions.Function1<Integer, Integer> eval = WasmFunctions.func(evalFn, I32, I32);
+        WasmFunctions.Function1<Integer, Integer> eval = WasmFunctions.func(store, evalFn, I32, I32);
         int errorCode = eval.call(ctxAddr.getInternal());
 
         return OPAErrorCode.fromValue(errorCode);
@@ -241,7 +244,7 @@ public class OPAExports implements OPAExportsAPI, Disposable {
 
     @Override
     public OPAAddr entrypoints() {
-        WasmFunctions.Function0<Integer> entrypoints = WasmFunctions.func(entrypointsFn, I32);
+        WasmFunctions.Function0<Integer> entrypoints = WasmFunctions.func(store, entrypointsFn, I32);
         int valueAddr = entrypoints.call();
 
         return OPAAddr.newAddr(valueAddr);
@@ -249,19 +252,19 @@ public class OPAExports implements OPAExportsAPI, Disposable {
 
     @Override
     public void opaEvalCtxSetEntryPoint(OPAAddr ctxAddr, int entrypoint_id) {
-        WasmFunctions.Consumer2<Integer, Integer> opa_eval_ctx_set_entrypoint = WasmFunctions.consumer(opaEvalCtxSetEntryPointFn, I32, I32);
+        WasmFunctions.Consumer2<Integer, Integer> opa_eval_ctx_set_entrypoint = WasmFunctions.consumer(store, opaEvalCtxSetEntryPointFn, I32, I32);
         opa_eval_ctx_set_entrypoint.accept(ctxAddr.getInternal(), entrypoint_id);
     }
 
     @Override
     public void opaFree(OPAAddr addr) {
-        WasmFunctions.Consumer1<Integer> opa_free = WasmFunctions.consumer(opaFreeFn, I32);
+        WasmFunctions.Consumer1<Integer> opa_free = WasmFunctions.consumer(store, opaFreeFn, I32);
         opa_free.accept(addr.getInternal());
     }
 
     @Override
     public OPAAddr opaValueParse(OPAAddr addr, int jsonLength) {
-        WasmFunctions.Function2<Integer, Integer, Integer> opa_value_parse = WasmFunctions.func(opaValueParseFn, I32, I32, I32);
+        WasmFunctions.Function2<Integer, Integer, Integer> opa_value_parse = WasmFunctions.func(store, opaValueParseFn, I32, I32, I32);
         int valueAddr = opa_value_parse.call(addr.getInternal(), jsonLength);
 
         return OPAAddr.newAddr(valueAddr);
@@ -269,7 +272,7 @@ public class OPAExports implements OPAExportsAPI, Disposable {
 
     @Override
     public OPAAddr opaValueDump(OPAAddr valueAddr) {
-        WasmFunctions.Function1<Integer, Integer> opa_value_dump = WasmFunctions.func(opaValueDumpFn, I32, I32);
+        WasmFunctions.Function1<Integer, Integer> opa_value_dump = WasmFunctions.func(store, opaValueDumpFn, I32, I32);
         int strAddr  = opa_value_dump.call(valueAddr.getInternal());
 
         return OPAAddr.newAddr(strAddr);
@@ -277,7 +280,7 @@ public class OPAExports implements OPAExportsAPI, Disposable {
 
     @Override
     public OPAErrorCode opaValueAddPath(OPAAddr baseValueAddr, OPAAddr pathValueAddr, OPAAddr valueAddr) {
-        WasmFunctions.Function3<Integer, Integer, Integer, Integer> opa_value_add_path = WasmFunctions.func(opaValueAddPathFn, I32, I32, I32, I32);
+        WasmFunctions.Function3<Integer, Integer, Integer, Integer> opa_value_add_path = WasmFunctions.func(store, opaValueAddPathFn, I32, I32, I32, I32);
         int errorCode = opa_value_add_path.call(baseValueAddr.getInternal(), pathValueAddr.getInternal(), valueAddr.getInternal());
 
         return OPAErrorCode.fromValue(errorCode);
@@ -285,7 +288,7 @@ public class OPAExports implements OPAExportsAPI, Disposable {
 
     @Override
     public OPAErrorCode opaValueRemovePath(OPAAddr baseValueAddr, OPAAddr pathValueAddr) {
-        WasmFunctions.Function2<Integer, Integer, Integer> opa_value_remove_path = WasmFunctions.func(opaValueRemovePathFn, I32, I32, I32);
+        WasmFunctions.Function2<Integer, Integer, Integer> opa_value_remove_path = WasmFunctions.func(store, opaValueRemovePathFn, I32, I32, I32);
         int errorCode = opa_value_remove_path.call(baseValueAddr.getInternal(), pathValueAddr.getInternal());
 
         return OPAErrorCode.fromValue(errorCode);

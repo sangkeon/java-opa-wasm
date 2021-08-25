@@ -10,8 +10,6 @@ import java.util.Iterator;
 
 import io.github.kawamuray.wasmtime.Linker;
 
-import io.github.kawamuray.wasmtime.Engine;
-
 import io.github.kawamuray.wasmtime.Extern;
 import io.github.kawamuray.wasmtime.Func;
 import io.github.kawamuray.wasmtime.Memory;
@@ -20,9 +18,8 @@ import io.github.kawamuray.wasmtime.MemoryType;
 import io.github.kawamuray.wasmtime.Module;
 import io.github.kawamuray.wasmtime.Store;
 import io.github.kawamuray.wasmtime.WasmFunctions;
-import io.github.kawamuray.wasmtime.wasi.Wasi;
-import io.github.kawamuray.wasmtime.wasi.WasiConfig;
-import io.github.kawamuray.wasmtime.wasi.WasiConfig.PreopenDir;
+import io.github.kawamuray.wasmtime.wasi.WasiCtx;
+import io.github.kawamuray.wasmtime.wasi.WasiCtxBuilder;
 
 import org.json.JSONObject;
 
@@ -30,9 +27,9 @@ public class OPAModule implements Disposable {
     private Map<Integer, String> builtinFunc = new HashMap<>();
     private Map<String, Integer> entrypoints = new HashMap<>();
 
-    private Store store;
-    private Engine engine;
+    private Store<Void> store;
     private Linker linker;
+    private WasiCtx wasi;
 
     private OPAExportsAPI exports;
 
@@ -43,7 +40,6 @@ public class OPAModule implements Disposable {
     private Func builtin2;
     private Func builtin3;
     private Func builtin4;
-    private Wasi wasi;
     private Memory memory;
     private Module module;
 
@@ -52,22 +48,20 @@ public class OPAModule implements Disposable {
     private OPAAddr _dataHeapPtr;
 
     public OPAModule(String filename) {
-        store = new Store();
-        engine = store.engine();
-        module = Module.fromFile(engine, filename);
-
-        linker = new Linker(store);
+        wasi = new WasiCtxBuilder().inheritStdout().inheritStderr().build();
+        store = Store.withoutData(wasi);
+        linker = new Linker(store.engine());
+        module = Module.fromFile(store.engine(), filename);
 
         initImports();
 
-        wasi = new Wasi(store, new WasiConfig(new String[0], new PreopenDir[0]));
-        wasi.addToLinker(linker);
+        WasiCtx.addToLinker(linker);
         
         String modulename = "policy";
 
-        linker.module(modulename, module);
+        linker.module(store, modulename, module);
 
-        exports = OPAExports.getOPAExports(linker, modulename);
+        exports = OPAExports.getOPAExports(linker, modulename, store);
 
         _baseHeapPtr = exports.opaHeapPtrGet();
         _dataHeapPtr = _baseHeapPtr;
@@ -77,22 +71,20 @@ public class OPAModule implements Disposable {
     }
 
     public OPAModule(Bundle bundle) {
-        store = new Store();
-        engine = store.engine();
-        module = Module.fromBinary(engine, bundle.getPolicy());
-
-        linker = new Linker(store);
+        wasi = new WasiCtxBuilder().inheritStdout().inheritStderr().build();
+        store = Store.withoutData(wasi);
+        linker = new Linker(store.engine());
+        module = Module.fromBinary(store.engine(), bundle.getPolicy());
 
         initImports();
 
-        wasi = new Wasi(store, new WasiConfig(new String[0], new PreopenDir[0]));
-        wasi.addToLinker(linker);
+        WasiCtx.addToLinker(linker);
         
         String modulename = "policy";
 
-        linker.module(modulename, module);
+        linker.module(store, modulename, module);
 
-        exports = OPAExports.getOPAExports(linker, modulename);
+        exports = OPAExports.getOPAExports(linker, modulename, store);
 
         _dataAddr = loadJson(bundle.getData());
         _baseHeapPtr = exports.opaHeapPtrGet();
@@ -218,7 +210,7 @@ public class OPAModule implements Disposable {
 
         OPAAddr addr = exports.opaMalloc(stringBytes.length);
 
-        ByteBuffer buf = memory.buffer();
+        ByteBuffer buf = memory.buffer(store);
 
         int internalAddr = addr.getInternal();
 
@@ -234,11 +226,11 @@ public class OPAModule implements Disposable {
         return decodeNullTerminatedString(memory, addr);
     }
 
-    private static String decodeNullTerminatedString(Memory memory, OPAAddr addr) {
+    private String decodeNullTerminatedString(Memory memory, OPAAddr addr) {
         int internalAddr = addr.getInternal();
         int end = internalAddr;
 
-        ByteBuffer buf = memory.buffer();
+        ByteBuffer buf = memory.buffer(store);
 
         while(buf.get(end) != 0) {
             end++;
@@ -390,11 +382,6 @@ public class OPAModule implements Disposable {
             if(linker != null) {
                 linker.dispose();
                 linker = null;
-            }
-    
-            if(engine != null) {
-                engine.dispose();
-                engine = null;
             }
 
             if(store != null) {
