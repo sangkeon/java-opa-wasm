@@ -13,6 +13,19 @@ public enum OPAErrorCode {
         return value;
     }
 
+    public String message() {
+        switch (this.value) {
+            case 1:
+                return "internal error";
+            case 2:
+                return "invalid type";
+            case 3:
+                return "invalid path";
+        }
+
+        return "ok";
+    }
+
     public static OPAErrorCode fromValue(int x) {
         switch (x) {
             case 0:

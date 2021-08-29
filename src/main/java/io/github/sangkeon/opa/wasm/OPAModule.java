@@ -2,6 +2,7 @@ package io.github.sangkeon.opa.wasm;
 
 import static io.github.kawamuray.wasmtime.WasmValType.I32;
 
+import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 
 import java.util.HashMap;
@@ -190,6 +191,10 @@ public class OPAModule implements Disposable {
         // Actually evaluate the policy
         OPAErrorCode err = exports.eval(ctxAddr);
 
+        if(err != OPAErrorCode.OPA_ERR_OK) {
+            throw new RuntimeException(String.format("evaluate error: %s", err.message())); 
+        }
+
         // Retrieve the result
         OPAAddr resultAddr = exports.opaEvalCtxGetResult(ctxAddr);
         return dumpJson(resultAddr);
@@ -307,10 +312,14 @@ public class OPAModule implements Disposable {
                 switch (funcName) {
                     case "urlquery.encode":
                         String unquoted = arg1.substring(1, arg1.length() - 1);
-                        String result = arg1.charAt(0) + java.net.URLEncoder.encode(unquoted)
-                         + arg1.charAt(arg1.length()-1);
+                        try {
+                            String result = arg1.charAt(0) + java.net.URLEncoder.encode(unquoted, "UTF-8")
+                                + arg1.charAt(arg1.length()-1);
     
-                        return loadJson(result).getInternal();
+                            return loadJson(result).getInternal();
+                        } catch(UnsupportedEncodingException e) {
+                            throw new RuntimeException(e);
+                        }
                     default:
                         break;
                 }
