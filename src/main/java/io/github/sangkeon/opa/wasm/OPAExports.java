@@ -2,11 +2,14 @@ package io.github.sangkeon.opa.wasm;
 
 import static io.github.kawamuray.wasmtime.WasmValType.I32;
 
+import java.util.Optional;
+
 import io.github.kawamuray.wasmtime.Linker;
 import io.github.kawamuray.wasmtime.Store;
 
 import io.github.kawamuray.wasmtime.Func;
 import io.github.kawamuray.wasmtime.Disposable;
+import io.github.kawamuray.wasmtime.Extern;
 import io.github.kawamuray.wasmtime.WasmFunctions;
 
 public class OPAExports implements OPAExportsAPI, Disposable {
@@ -31,6 +34,7 @@ public class OPAExports implements OPAExportsAPI, Disposable {
     private Func opaValueDumpFn = null;
     private Func opaValueAddPathFn = null;
     private Func opaValueRemovePathFn = null;
+    private Func opaEvalFn = null;
 
     private OPAExports(Linker linker, String moduleName, Store<Void> store) {
         this.linker = linker;
@@ -62,6 +66,15 @@ public class OPAExports implements OPAExportsAPI, Disposable {
         opaValueDumpFn = linker.get(store, moduleName, OPAConstants.OPA_VALUE_DUMP).get().func();
         opaValueAddPathFn = linker.get(store, moduleName, OPAConstants.OPA_VALUE_ADD_PATH).get().func();
         opaValueRemovePathFn = linker.get(store, moduleName, OPAConstants.OPA_VALUE_REMOVE_PATH).get().func();
+
+        Optional<Extern> opaEvalExtern = linker.get(store, moduleName, OPAConstants.OPA_EVAL);
+
+        if(opaEvalExtern.isPresent()) {
+            opaEvalFn = opaEvalExtern.get().func();
+        }
+        // if(linker.get(store, moduleName, OPAConstants.OPA_WASM_ABI_VERSION).isPresent()) {
+        // //    System.out.println(linker.get(store, moduleName, OPAConstants.OPA_WASM_ABI_VERSION));
+        // }
     }
 
     public void disposeFns() {
@@ -153,6 +166,11 @@ public class OPAExports implements OPAExportsAPI, Disposable {
         if(opaValueRemovePathFn != null) {
             opaValueRemovePathFn.dispose();
             opaValueRemovePathFn = null;
+        }
+
+        if(opaEvalFn != null) {
+            opaEvalFn.dispose();
+            opaEvalFn = null;
         }
     }
 
@@ -292,5 +310,23 @@ public class OPAExports implements OPAExportsAPI, Disposable {
         int errorCode = opa_value_remove_path.call(baseValueAddr.getInternal(), pathValueAddr.getInternal());
 
         return OPAErrorCode.fromValue(errorCode);
+    }
+
+    @Override
+    public OPAAddr opaEval(OPAAddr reservedAddr, int entrypoint_id,  OPAAddr valueAddr, OPAAddr strAddr, int length, OPAAddr heapAddr, int format) {
+        if(opaEvalFn == null) {
+            throw new UnsupportedOperationException("opa_eval not supported, may be compiled using unsupported ABI(<1.2)");
+        }
+
+        WasmFunctions.Function7<Integer, Integer, Integer, Integer, Integer, Integer, Integer, Integer> opa_eval = WasmFunctions.func(store, opaEvalFn, I32, I32, I32, I32, I32, I32, I32, I32);
+
+        int resultStrAddr = opa_eval.call(reservedAddr.getInternal(), entrypoint_id, valueAddr.getInternal(), strAddr.getInternal(), length, heapAddr.getInternal(), format);
+        
+        return OPAAddr.newAddr(resultStrAddr);
+    }
+
+    @Override
+    public boolean isFastPathEvalSupported() {
+        return (opaEvalFn != null);
     }
 }

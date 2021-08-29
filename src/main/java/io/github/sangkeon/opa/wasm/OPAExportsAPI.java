@@ -36,4 +36,8 @@ public interface OPAExportsAPI {
     public OPAErrorCode opaValueAddPath(OPAAddr baseValueAddr, OPAAddr pathValueAddr, OPAAddr valueAddr);
 
     public OPAErrorCode opaValueRemovePath(OPAAddr baseValueAddr, OPAAddr pathValueAddr);
+
+    public OPAAddr opaEval(OPAAddr reservedAddr, int entrypoint_id,  OPAAddr valueAddr, OPAAddr strAddr, int length, OPAAddr heapAddr, int format);
+
+    public boolean isFastPathEvalSupported();
 }

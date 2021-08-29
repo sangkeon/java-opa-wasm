@@ -167,6 +167,14 @@ public class OPAModule implements Disposable {
     }
     
     public String evaluate(String json, int entrypoint) {
+        if(exports.isFastPathEvalSupported()) {
+            return evaluateFastPath(json, entrypoint);
+        } else {
+            return evaluateNormalPath(json, entrypoint);
+        }
+    }
+
+    private String evaluateNormalPath(String json, int entrypoint) {
         // Reset the heap pointer before each evaluation
         exports.opaHeapPtrSet(_dataHeapPtr);
 
@@ -185,6 +193,30 @@ public class OPAModule implements Disposable {
         // Retrieve the result
         OPAAddr resultAddr = exports.opaEvalCtxGetResult(ctxAddr);
         return dumpJson(resultAddr);
+    }
+
+    private int putJsonInMemory(String value) {
+        byte[] stringBytes = value.getBytes();
+
+        int size = stringBytes.length;
+
+        ByteBuffer buf = memory.buffer(store);
+
+        for(int i = 0; i < size; i++) {
+            buf.put(i, stringBytes[i]);
+        }
+
+        this._dataHeapPtr = OPAAddr.newAddr(size);
+
+        return size;
+    }
+
+    private String evaluateFastPath(String json, int entrypoint) {
+        int size = putJsonInMemory(json);
+
+        OPAAddr resultAddr = exports.opaEval(OPAAddr.newAddr(0), entrypoint, this._dataAddr, OPAAddr.newAddr(0), size, this._dataHeapPtr,0);
+
+        return decodeNullTerminatedString(memory, resultAddr);
     }
 
     public void setData(String json) {
@@ -248,7 +280,7 @@ public class OPAModule implements Disposable {
     }
 
     private void initImports() {
-        memory = new Memory(store, new MemoryType(new MemoryType.Limit(2)));
+        memory = new Memory(store, new MemoryType(new MemoryType.Limit(5)));
 
         abort = WasmFunctions.wrap(store, I32, (addr) -> {
         });
@@ -323,7 +355,6 @@ public class OPAModule implements Disposable {
         linker.define(OPAConstants.MODULE, OPAConstants.OPA_PRINTLN, opaprintln);
         linker.define(OPAConstants.MODULE, OPAConstants.MEMORY, opamemory);
     }
-
 
     private void disposeImports() {
         if(memory != null) {

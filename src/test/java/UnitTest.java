@@ -73,4 +73,35 @@ public class UnitTest {
             assertEquals("[{\"result\":false}]", output);
         }
     }
+
+
+    @Test
+    public void wasmABI1_1Test() throws Exception {
+        try (
+            OPAModule om = new OPAModule("./sample-policy/wasm/policy_abi1_1.wasm");
+        ) {
+            String input = "{\"user\": \"john\"}";
+            String data = "{\"role\":{\"john\":\"user\"}}";
+
+            om.setData(data);
+            String output = om.evaluate(input);
+
+            assertEquals("[{\"result\":false}]", output);
+        }
+    }
+
+    @Test
+    public void wasmABI1_2Test() throws Exception {
+        try (
+            OPAModule om = new OPAModule("./sample-policy/wasm/policy_abi1_2.wasm");
+        ) {
+            String input = "{\"user\": \"john\"}";
+            String data = "{\"role\":{\"john\":\"user\"}}";
+
+            om.setData(data);
+            String output = om.evaluate(input);
+
+            assertEquals("[{\"result\":false}]", output);
+        }
+    }
 }

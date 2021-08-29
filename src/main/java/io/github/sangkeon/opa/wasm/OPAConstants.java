@@ -32,4 +32,9 @@ public class OPAConstants {
     public static final String OPA_VALUE_DUMP = "opa_value_dump";
     public static final String OPA_VALUE_ADD_PATH = "opa_value_add_path";
     public static final String OPA_VALUE_REMOVE_PATH = "opa_value_remove_path";
+
+    public static final String OPA_EVAL = "opa_eval";
+
+    public static final String OPA_WASM_ABI_VERSION = "opa_wasm_abi_version";
+    public static final String OPA_WASM_ABI_MINOR_VERSION = "opa_wasm_abi_minor_version";
 }
