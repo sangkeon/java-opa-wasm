@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>io.github.sangkeon</groupId>
   <artifactId>opa-wasm</artifactId>
-  <version>0.2.0</version>
+  <version>0.2.1</version>
   <properties>
       <maven.compiler.target>1.8</maven.compiler.target>
       <maven.compiler.source>1.8</maven.compiler.source>
@@ -12,7 +12,7 @@
     <dependency>
         <groupId>io.github.kawamuray.wasmtime</groupId>
         <artifactId>wasmtime-java</artifactId>
-        <version>0.6.0</version>
+        <version>0.9.0</version>
     </dependency>
     <dependency>
       <groupId>org.apache.commons</groupId>

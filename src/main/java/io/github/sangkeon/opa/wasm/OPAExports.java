@@ -4,13 +4,7 @@ import static io.github.kawamuray.wasmtime.WasmValType.I32;
 
 import java.util.Optional;
 
-import io.github.kawamuray.wasmtime.Linker;
-import io.github.kawamuray.wasmtime.Store;
-
-import io.github.kawamuray.wasmtime.Func;
-import io.github.kawamuray.wasmtime.Disposable;
-import io.github.kawamuray.wasmtime.Extern;
-import io.github.kawamuray.wasmtime.WasmFunctions;
+import io.github.kawamuray.wasmtime.*;
 
 public class OPAExports implements OPAExportsAPI, Disposable {
     private Linker linker;
@@ -35,6 +29,8 @@ public class OPAExports implements OPAExportsAPI, Disposable {
     private Func opaValueAddPathFn = null;
     private Func opaValueRemovePathFn = null;
     private Func opaEvalFn = null;
+    private Integer abiMajorVersion = null;
+    private Integer abiMinorVersion = null;
 
     private OPAExports(Linker linker, String moduleName, Store<Void> store) {
         this.linker = linker;
@@ -72,9 +68,22 @@ public class OPAExports implements OPAExportsAPI, Disposable {
         if(opaEvalExtern.isPresent()) {
             opaEvalFn = opaEvalExtern.get().func();
         }
-        // if(linker.get(store, moduleName, OPAConstants.OPA_WASM_ABI_VERSION).isPresent()) {
-        // //    System.out.println(linker.get(store, moduleName, OPAConstants.OPA_WASM_ABI_VERSION));
-        // }
+
+        if(linker.get(store, moduleName, OPAConstants.OPA_WASM_ABI_VERSION).isPresent()) {
+            Global majorVersion = linker.get(store, moduleName, OPAConstants.OPA_WASM_ABI_VERSION).get().global();
+
+            this.abiMajorVersion = majorVersion.get(store).i32();
+
+            majorVersion.dispose();
+        }
+
+        if(linker.get(store, moduleName, OPAConstants.OPA_WASM_ABI_MINOR_VERSION).isPresent()) {
+            Global minorVersion = linker.get(store, moduleName, OPAConstants.OPA_WASM_ABI_MINOR_VERSION).get().global();
+
+            this.abiMinorVersion = minorVersion.get(store).i32();
+
+            minorVersion.dispose();
+        }
     }
 
     public void disposeFns() {
@@ -329,4 +338,10 @@ public class OPAExports implements OPAExportsAPI, Disposable {
     public boolean isFastPathEvalSupported() {
         return (opaEvalFn != null);
     }
+
+    @Override
+    public Integer getAbiMajorVersion() { return abiMajorVersion; }
+
+    @Override
+    public Integer getAbiMinorVersion() { return abiMinorVersion; }
 }

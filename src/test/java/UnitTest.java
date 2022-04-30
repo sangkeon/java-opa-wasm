@@ -86,6 +86,9 @@ public class UnitTest {
             om.setData(data);
             String output = om.evaluate(input);
 
+            assertEquals(Integer.valueOf(1), om.getAbiMajorVersion());
+            assertEquals(Integer.valueOf(1), om.getAbiMinorVersion());
+
             assertEquals("[{\"result\":false}]", output);
         }
     }
@@ -100,6 +103,9 @@ public class UnitTest {
 
             om.setData(data);
             String output = om.evaluate(input);
+
+            assertEquals(Integer.valueOf(1), om.getAbiMajorVersion());
+            assertEquals(Integer.valueOf(2), om.getAbiMinorVersion());
 
             assertEquals("[{\"result\":false}]", output);
         }

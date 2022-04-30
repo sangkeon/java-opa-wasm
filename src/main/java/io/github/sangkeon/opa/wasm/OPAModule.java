@@ -433,4 +433,11 @@ public class OPAModule implements Disposable {
         }
     }
 
+    public Integer getAbiMajorVersion() {
+        return exports.getAbiMajorVersion();
+    }
+
+    public Integer getAbiMinorVersion() {
+        return exports.getAbiMinorVersion();
+    }
 }

@@ -40,4 +40,8 @@ public interface OPAExportsAPI {
     public OPAAddr opaEval(OPAAddr reservedAddr, int entrypoint_id,  OPAAddr valueAddr, OPAAddr strAddr, int length, OPAAddr heapAddr, int format);
 
     public boolean isFastPathEvalSupported();
+
+    public Integer getAbiMajorVersion();
+
+    public Integer getAbiMinorVersion();
 }
