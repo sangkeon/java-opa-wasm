@@ -17,6 +17,16 @@ Tested under OPA version 0.26.0
 Warning: Very early stage project and OPA's env module requirements not implemented(just place holder).
 
 ## Usage
+
+### Maven dependency ###
+```
+    <dependency>
+        <groupId>io.github.sangkeon</groupId>
+        <artifactId>java-opa-wasm</artifactId>
+        <version>0.2.1</version>
+    </dependency>
+```
+
 ### To load and evaluate for OPA wasm file 
 ```
 try (
