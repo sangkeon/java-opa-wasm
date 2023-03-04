@@ -14,7 +14,9 @@ Inspired by and, borrowed many ideas+codes from following projects.
 
 Tested under OPA version 0.26.0
 
-Warning: Very early stage project and OPA's env module requirements not implemented(just place holder).
+## Warning
+- Very early stage project and OPA's env module requirements not implemented(just place holder).
+- If you are using an Apple Silicon Mac, see [FOR_APPLE_SILICON_USERS.md](./FOR_APPLE_SILICON_USERS.md) for first.
 
 ## Usage
 
