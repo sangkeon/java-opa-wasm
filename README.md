@@ -25,7 +25,7 @@ Tested under OPA version 0.26.0
     <dependency>
         <groupId>io.github.sangkeon</groupId>
         <artifactId>java-opa-wasm</artifactId>
-        <version>0.2.1</version>
+        <version>0.2.2</version>
     </dependency>
 ```
 
