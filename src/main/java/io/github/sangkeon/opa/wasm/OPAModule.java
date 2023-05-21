@@ -294,13 +294,21 @@ public class OPAModule implements Disposable {
         memory = new Memory(store, new MemoryType(5L, false));
 
         abort = WasmFunctions.wrap(store, I32, (addr) -> {
+            throw new RuntimeException(readStringFromOPAMemory(OPAAddr.newAddr(addr)));
         });
 
         println = WasmFunctions.wrap(store, I32, (addr) -> {
+            System.out.println(readStringFromOPAMemory(OPAAddr.newAddr(addr)));
         });
 
         builtin0 = WasmFunctions.wrap(store, I32, I32, I32, 
             (builtinId, opaCtxReserved) -> {
+                String funcName = getFuncName(builtinId);
+
+                checkBuiltinFunctionExists(builtinId, funcName);
+
+                unsupportedFunction(builtinId, funcName);
+
                 return 0;
             }
         );
@@ -309,9 +317,7 @@ public class OPAModule implements Disposable {
             (builtinId, opaCtxReserved, addr1) -> {
                 String funcName = getFuncName(builtinId);
 
-                if(funcName == null) {
-                    throw new UnsupportedOperationException("builtin function builtinId=" + builtinId + " not supported");
-                }
+                checkBuiltinFunctionExists(builtinId, funcName);
 
                 String arg1 = dumpJson(OPAAddr.newAddr(addr1));
 
@@ -327,27 +333,43 @@ public class OPAModule implements Disposable {
                             throw new RuntimeException(e);
                         }
                     default:
-                        break;
+                        unsupportedFunction(builtinId, funcName);
                 }
-
                 return 0;
             }
         );
 
         builtin2 = WasmFunctions.wrap(store, I32, I32, I32, I32, I32, 
             (builtinId, opaCtxReserved, addr1, addr2) -> {
+                String funcName = getFuncName(builtinId);
+
+                checkBuiltinFunctionExists(builtinId, funcName);
+
+                unsupportedFunction(builtinId, funcName);
                 return 0;
             }
         );
 
         builtin3 = WasmFunctions.wrap(store, I32, I32, I32, I32, I32, I32, 
             (builtinId, opaCtxReserved, addr1, addr2, addr3) -> {
+                String funcName = getFuncName(builtinId);
+
+                checkBuiltinFunctionExists(builtinId, funcName);
+
+                unsupportedFunction(builtinId, funcName);
+
                 return 0;
             }
         );
 
         builtin4 = WasmFunctions.wrap(store, I32, I32, I32, I32, I32, I32, I32,
             (builtinId, opaCtxReserved, addr1, addr2, addr3, addr4) -> {
+                String funcName = getFuncName(builtinId);
+
+                checkBuiltinFunctionExists(builtinId, funcName);
+
+                unsupportedFunction(builtinId, funcName);
+
                 return 0;
             }
         );
@@ -369,6 +391,17 @@ public class OPAModule implements Disposable {
         linker.define(OPAConstants.MODULE, OPAConstants.OPA_BUILTIN4, opabuiltin4);
         linker.define(OPAConstants.MODULE, OPAConstants.OPA_PRINTLN, opaprintln);
         linker.define(OPAConstants.MODULE, OPAConstants.MEMORY, opamemory);
+    }
+
+    private static void checkBuiltinFunctionExists(Integer builtinId, String funcName) {
+        if(funcName == null) {
+            throw new UnsupportedOperationException("builtin function builtinId=" + builtinId + " not supported");
+        }
+    }
+
+    private static void unsupportedFunction(Integer builtinId, String funcName) {
+        throw new UnsupportedOperationException("builtin function '" + funcName + "', builtinId="
+                + builtinId + " not supported");
     }
 
     private void disposeImports() {
