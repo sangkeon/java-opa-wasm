@@ -11,6 +11,10 @@ public class OPAAddr {
         return new OPAAddr(addr);
     }
 
+    public OPAAddr copy() {
+        return OPAAddr.newAddr(addr);
+    }
+
     public int getInternal() {
         return addr;
     }

@@ -200,7 +200,7 @@ public class OPAExports implements OPAExportsAPI, Disposable {
         WasmFunctions.Function0<Integer> opa_heap_ptr_get = WasmFunctions.func(store, opaHeapPtrGetFn, I32);
         int addr = opa_heap_ptr_get.call();
 
-        return  OPAAddr.newAddr(addr);
+        return OPAAddr.newAddr(addr);
     }
 
     @Override

@@ -25,6 +25,8 @@ import io.github.kawamuray.wasmtime.wasi.WasiCtxBuilder;
 import org.json.JSONObject;
 
 public class OPAModule implements Disposable {
+    public static final String EMPTY_JSON = "{}";
+    public static final String MODULE_NAME = "policy";
     private Map<Integer, String> builtinFunc = new HashMap<>();
     private Map<String, Integer> entrypoints = new HashMap<>();
 
@@ -47,10 +49,15 @@ public class OPAModule implements Disposable {
     private OPAAddr _dataAddr;
     private OPAAddr _baseHeapPtr;
     private OPAAddr _dataHeapPtr;
+    private OPAAddr _heapPtr;
 
     public OPAModule(String filename) {
+        this(filename, EMPTY_JSON);
+    }
+
+    public OPAModule(String filename, String json) {
         wasi = new WasiCtxBuilder().inheritStdout().inheritStderr().build();
-        store = Store.withoutData(wasi);
+        store = Store.withoutData();
         linker = new Linker(store.engine());
         module = Module.fromFile(store.engine(), filename);
 
@@ -58,17 +65,17 @@ public class OPAModule implements Disposable {
 
         WasiCtx.addToLinker(linker);
         
-        String modulename = "policy";
+        linker.module(store, MODULE_NAME, module);
 
-        linker.module(store, modulename, module);
-
-        exports = OPAExports.getOPAExports(linker, modulename, store);
-
-        _baseHeapPtr = exports.opaHeapPtrGet();
-        _dataHeapPtr = _baseHeapPtr;
-        _dataAddr = loadJson("{}");
+        exports = OPAExports.getOPAExports(linker, MODULE_NAME, store);
 
         loadBuiltins();
+        loadEntrypoints();
+
+        _dataAddr = loadJson(json);
+        _baseHeapPtr = exports.opaHeapPtrGet();
+        _dataHeapPtr = _baseHeapPtr.copy();
+        _heapPtr = _baseHeapPtr.copy();
     }
 
     public OPAModule(Bundle bundle) {
@@ -81,19 +88,17 @@ public class OPAModule implements Disposable {
 
         WasiCtx.addToLinker(linker);
         
-        String modulename = "policy";
+        linker.module(store, MODULE_NAME, module);
 
-        linker.module(store, modulename, module);
+        exports = OPAExports.getOPAExports(linker, MODULE_NAME, store);
 
-        exports = OPAExports.getOPAExports(linker, modulename, store);
+        loadBuiltins();
+        loadEntrypoints();
 
         _dataAddr = loadJson(bundle.getData());
         _baseHeapPtr = exports.opaHeapPtrGet();
-        _dataHeapPtr = _baseHeapPtr;
-
-        loadBuiltins();
-
-        loadEntrypoints();
+        _dataHeapPtr = _baseHeapPtr.copy();
+        _heapPtr = _baseHeapPtr.copy();
     }
 
     public Map<String, Integer> getEntrypoints() {
@@ -168,6 +173,8 @@ public class OPAModule implements Disposable {
     }
     
     public String evaluate(String json, int entrypoint) {
+        _heapPtr = _dataHeapPtr.copy();
+
         if(exports.isFastPathEvalSupported()) {
             return evaluateFastPath(json, entrypoint);
         } else {
@@ -200,26 +207,20 @@ public class OPAModule implements Disposable {
         return dumpJson(resultAddr);
     }
 
-    private int putJsonInMemory(String value) {
-        byte[] stringBytes = value.getBytes();
-
-        int size = stringBytes.length;
+    private String evaluateFastPath(String json, int entrypoint) {
+        byte[] jsonBytes = json.getBytes();
+        int size = jsonBytes.length;
 
         ByteBuffer buf = memory.buffer(store);
-
+        OPAAddr inputAddr = _heapPtr.copy();
         for(int i = 0; i < size; i++) {
-            buf.put(i, stringBytes[i]);
+            buf.put(inputAddr.getInternal() + i, jsonBytes[i]);
         }
 
-        this._dataHeapPtr = OPAAddr.newAddr(size);
+        this._heapPtr = OPAAddr.newAddr(inputAddr.getInternal() + size);
 
-        return size;
-    }
-
-    private String evaluateFastPath(String json, int entrypoint) {
-        int size = putJsonInMemory(json);
-
-        OPAAddr resultAddr = exports.opaEval(OPAAddr.newAddr(0), entrypoint, this._dataAddr, OPAAddr.newAddr(0), size, this._dataHeapPtr,0);
+        OPAAddr resultAddr = exports.opaEval(OPAAddr.newAddr(0), entrypoint, this._dataAddr,
+                inputAddr, jsonBytes.length, _heapPtr ,0);
 
         return decodeNullTerminatedString(memory, resultAddr);
     }
@@ -228,6 +229,7 @@ public class OPAModule implements Disposable {
         exports.opaHeapPtrSet(_baseHeapPtr);
         _dataAddr = loadJson(json);
         _dataHeapPtr = exports.opaHeapPtrGet();
+        _heapPtr = _dataHeapPtr.copy();
     }
 
     public OPAAddr loadJson(String json) {
@@ -274,6 +276,10 @@ public class OPAModule implements Disposable {
         }
 
         int size = end - internalAddr;
+
+        if (size == 0) {
+            return "";
+        }
 
         byte[] result = new byte[size];
 
@@ -340,7 +346,7 @@ public class OPAModule implements Disposable {
             }
         );
 
-        builtin4 = WasmFunctions.wrap(store, I32, I32, I32,  I32, I32, I32, I32,
+        builtin4 = WasmFunctions.wrap(store, I32, I32, I32, I32, I32, I32, I32,
             (builtinId, opaCtxReserved, addr1, addr2, addr3, addr4) -> {
                 return 0;
             }
