@@ -33,22 +33,27 @@
   <properties>
       <maven.compiler.target>1.8</maven.compiler.target>
       <maven.compiler.source>1.8</maven.compiler.source>
+      <project.build.sourceEncoding>utf-8</project.build.sourceEncoding>
+      <project.reporting.outputEncoding>utf-8</project.reporting.outputEncoding>
   </properties>
   <dependencies>
     <dependency>
-        <groupId>io.github.kawamuray.wasmtime</groupId>
-        <artifactId>wasmtime-java</artifactId>
-        <version>0.9.0</version>
+      <groupId>io.github.kawamuray.wasmtime</groupId>
+      <artifactId>wasmtime-java</artifactId>
+      <version>0.14.0</version>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-compress</artifactId>
-      <version>1.21</version>
+      <version>1.23.0</version>
+      <scope>provided</scope>
     </dependency>
     <dependency>
-        <groupId>org.json</groupId>
-        <artifactId>json</artifactId>
-        <version>20201115</version>
+      <groupId>org.json</groupId>
+      <artifactId>json</artifactId>
+      <version>20230227</version>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>junit</groupId>
@@ -66,8 +71,16 @@
   <build>
     <plugins>
       <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.11.0</version>
+        <configuration>
+          <!-- put your configurations here -->
+        </configuration>
+      </plugin>
+      <plugin>
         <artifactId>maven-javadoc-plugin</artifactId>
-        <version>3.0.1</version>
+        <version>3.5.0</version>
         <configuration>
           <additionalJOption>-Xdoclint:none</additionalJOption>
         </configuration>
@@ -82,7 +95,7 @@
       </plugin>
       <plugin>
         <artifactId>maven-source-plugin</artifactId>
-        <version>3.0.1</version>
+        <version>3.2.1</version>
         <executions>
           <execution>
             <id>attach-sources</id>

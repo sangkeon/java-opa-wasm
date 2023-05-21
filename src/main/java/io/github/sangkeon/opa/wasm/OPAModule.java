@@ -291,7 +291,7 @@ public class OPAModule implements Disposable {
     }
 
     private void initImports() {
-        memory = new Memory(store, new MemoryType(new MemoryType.Limit(5)));
+        memory = new Memory(store, new MemoryType(5L, false));
 
         abort = WasmFunctions.wrap(store, I32, (addr) -> {
         });
