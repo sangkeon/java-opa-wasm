@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>io.github.sangkeon</groupId>
   <artifactId>java-opa-wasm</artifactId>
-  <version>0.2.2</version>
+  <version>0.2.3</version>
   <packaging>jar</packaging>
 
   <name>java-opa-wasm</name>
@@ -41,19 +41,16 @@
       <groupId>io.github.kawamuray.wasmtime</groupId>
       <artifactId>wasmtime-java</artifactId>
       <version>0.14.0</version>
-      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-compress</artifactId>
       <version>1.23.0</version>
-      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.json</groupId>
       <artifactId>json</artifactId>
       <version>20230227</version>
-      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>junit</groupId>
