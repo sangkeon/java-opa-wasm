@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>io.github.sangkeon</groupId>
   <artifactId>java-opa-wasm</artifactId>
-  <version>0.2.3</version>
+  <version>0.2.3_glibc2.31</version>
   <packaging>jar</packaging>
 
   <name>java-opa-wasm</name>
@@ -40,7 +40,7 @@
     <dependency>
       <groupId>io.github.kawamuray.wasmtime</groupId>
       <artifactId>wasmtime-java</artifactId>
-      <version>0.14.0</version>
+      <version>0.13.0</version>
     </dependency>
     <dependency>
       <groupId>org.apache.commons</groupId>
