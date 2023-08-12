@@ -383,14 +383,14 @@ public class OPAModule implements Disposable {
         Extern opaprintln = Extern.fromFunc(println);
         Extern opamemory = Extern.fromMemory(memory);
 
-        linker.define(OPAConstants.MODULE, OPAConstants.OPA_ABORT, opaabort);
-        linker.define(OPAConstants.MODULE, OPAConstants.OPA_BUILTIN0, opabuiltin0);
-        linker.define(OPAConstants.MODULE, OPAConstants.OPA_BUILTIN1, opabuiltin1);
-        linker.define(OPAConstants.MODULE, OPAConstants.OPA_BUILTIN2, opabuiltin2);
-        linker.define(OPAConstants.MODULE, OPAConstants.OPA_BUILTIN3, opabuiltin3);
-        linker.define(OPAConstants.MODULE, OPAConstants.OPA_BUILTIN4, opabuiltin4);
-        linker.define(OPAConstants.MODULE, OPAConstants.OPA_PRINTLN, opaprintln);
-        linker.define(OPAConstants.MODULE, OPAConstants.MEMORY, opamemory);
+        linker.define(store, OPAConstants.MODULE, OPAConstants.OPA_ABORT, opaabort);
+        linker.define(store, OPAConstants.MODULE, OPAConstants.OPA_BUILTIN0, opabuiltin0);
+        linker.define(store, OPAConstants.MODULE, OPAConstants.OPA_BUILTIN1, opabuiltin1);
+        linker.define(store, OPAConstants.MODULE, OPAConstants.OPA_BUILTIN2, opabuiltin2);
+        linker.define(store, OPAConstants.MODULE, OPAConstants.OPA_BUILTIN3, opabuiltin3);
+        linker.define(store, OPAConstants.MODULE, OPAConstants.OPA_BUILTIN4, opabuiltin4);
+        linker.define(store, OPAConstants.MODULE, OPAConstants.OPA_PRINTLN, opaprintln);
+        linker.define(store, OPAConstants.MODULE, OPAConstants.MEMORY, opamemory);
     }
 
     private static void checkBuiltinFunctionExists(Integer builtinId, String funcName) {
